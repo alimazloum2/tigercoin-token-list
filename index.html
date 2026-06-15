@@ -92,6 +92,21 @@
       }
     }
 
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    async function waitForBase(provider) {
+      const deadline = Date.now() + 8000;
+      while (Date.now() < deadline) {
+        const activeChainId = await provider.request({ method: 'eth_chainId' });
+        if (String(activeChainId).toLowerCase() === BASE_PARAMS.chainId) {
+          return activeChainId;
+        }
+        await sleep(400);
+      }
+      const activeChainId = await provider.request({ method: 'eth_chainId' });
+      throw new Error(`MetaMask is still on chain ${activeChainId}. Switch to Base (${BASE_PARAMS.chainId}) and tap again.`);
+    }
+
     async function ensureBase(provider) {
       try {
         await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_PARAMS.chainId }] });
@@ -102,25 +117,34 @@
           throw new Error(`Could not switch to Base: ${switchError && switchError.message ? switchError.message : String(switchError)}`);
         }
       }
-      const activeChainId = await provider.request({ method: 'eth_chainId' });
-      if (String(activeChainId).toLowerCase() !== BASE_PARAMS.chainId) {
-        throw new Error(`MetaMask is still on chain ${activeChainId}. Switch to Base (${BASE_PARAMS.chainId}) and tap again.`);
-      }
+      await waitForBase(provider);
+      // MetaMask Mobile's wallet_watchAsset checks an internal network client, which can lag
+      // behind eth_chainId immediately after switching chains. Give it time to sync.
+      await sleep(1500);
     }
 
     async function addToken(provider) {
-      // Current MetaMask docs show the EIP-747 call as params: ['ERC20', options].
-      // Some older extension builds accepted params: { type, options }, so keep that as a fallback.
-      try {
-        return await provider.request({ method: 'wallet_watchAsset', params: [TOKEN.type, TOKEN.options] });
-      } catch (arrayError) {
+      let lastError;
+      for (let attempt = 1; attempt <= 4; attempt += 1) {
         try {
           return await provider.request({ method: 'wallet_watchAsset', params: TOKEN });
-        } catch (objectError) {
-          const arrayMessage = arrayError && arrayError.message ? arrayError.message : String(arrayError);
-          const objectMessage = objectError && objectError.message ? objectError.message : String(objectError);
-          throw new Error(`MetaMask rejected both add-token formats. Current docs format: ${arrayMessage}. Legacy format: ${objectMessage}`);
+        } catch (error) {
+          lastError = error;
+          const message = error && error.message ? error.message : String(error);
+          if (!message.includes('not supported on this network') || attempt === 4) {
+            break;
+          }
+          showStatus(`MetaMask is syncing Base internally. Retrying add-token request ${attempt + 1}/4…`);
+          await sleep(1200);
         }
+      }
+      const objectMessage = lastError && lastError.message ? lastError.message : String(lastError);
+      try {
+        // Desktop/current docs fallback. MetaMask Mobile source does not currently use this shape.
+        return await provider.request({ method: 'wallet_watchAsset', params: [TOKEN.type, TOKEN.options] });
+      } catch (arrayError) {
+        const arrayMessage = arrayError && arrayError.message ? arrayError.message : String(arrayError);
+        throw new Error(`MetaMask rejected TigerCoin. Mobile/object format: ${objectMessage}. Desktop/docs format: ${arrayMessage}`);
       }
     }
 
