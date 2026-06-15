@@ -1,0 +1,26 @@
+{
+  "name": "TigerCoin Token List",
+  "timestamp": "2026-06-15T00:00:00+00:00",
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "tags": {},
+  "logoURI": "https://alimazloum2.github.io/tigercoin-token-list/assets/logo.png",
+  "keywords": [
+    "tigercoin",
+    "tgr",
+    "base"
+  ],
+  "tokens": [
+    {
+      "chainId": 8453,
+      "address": "0xa79d3083a7e303Db38e013C54135F178834Ccb1B",
+      "name": "TigerCoin",
+      "symbol": "TGR",
+      "decimals": 18,
+      "logoURI": "https://alimazloum2.github.io/tigercoin-token-list/assets/logo.png"
+    }
+  ]
+}
