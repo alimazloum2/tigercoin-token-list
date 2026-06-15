@@ -23,6 +23,12 @@
   <p><img src="assets/logo.png" alt="TigerCoin logo" width="128" height="128"></p>
   <p><strong>Token:</strong> TigerCoin (<code>TGR</code>) on Base, chain ID <code>8453</code>.</p>
   <p><strong>Contract:</strong> <code id="contract">0xa79d3083a7e303Db38e013C54135F178834Ccb1B</code></p>
+  <p>TigerCoin is an ERC-20 community token deployed on Base. This page is the public token metadata page for wallet imports and token-list integrations.</p>
+  <ul>
+    <li><strong>BaseScan:</strong> <a href="https://basescan.org/token/0xa79d3083a7e303Db38e013C54135F178834Ccb1B">verified TGR contract</a></li>
+    <li><strong>Pool:</strong> <a href="https://www.geckoterminal.com/base/pools/0x51D79c0AF0AF6cE1af8a0c9520cF6836bd7995b2">TGR/WETH on GeckoTerminal</a></li>
+    <li><strong>Token list:</strong> <a href="tokenlist.json">Uniswap-format tokenlist.json</a></li>
+  </ul>
   <p>
     <button id="add-token">Add TGR to MetaMask</button>
     <a class="button secondary" id="open-metamask" href="https://metamask.app.link/dapp/alimazloum2.github.io/tigercoin-token-list/">Open in MetaMask Mobile</a>
@@ -78,27 +84,63 @@
       }
     });
 
+    async function ensureConnected(provider) {
+      try {
+        await provider.request({ method: 'eth_requestAccounts' });
+      } catch (error) {
+        throw new Error(`MetaMask connection was rejected or failed: ${error && error.message ? error.message : String(error)}`);
+      }
+    }
+
+    async function ensureBase(provider) {
+      try {
+        await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_PARAMS.chainId }] });
+      } catch (switchError) {
+        if (switchError && switchError.code === 4902) {
+          await provider.request({ method: 'wallet_addEthereumChain', params: [BASE_PARAMS] });
+        } else {
+          throw new Error(`Could not switch to Base: ${switchError && switchError.message ? switchError.message : String(switchError)}`);
+        }
+      }
+      const activeChainId = await provider.request({ method: 'eth_chainId' });
+      if (String(activeChainId).toLowerCase() !== BASE_PARAMS.chainId) {
+        throw new Error(`MetaMask is still on chain ${activeChainId}. Switch to Base (${BASE_PARAMS.chainId}) and tap again.`);
+      }
+    }
+
+    async function addToken(provider) {
+      // Current MetaMask docs show the EIP-747 call as params: ['ERC20', options].
+      // Some older extension builds accepted params: { type, options }, so keep that as a fallback.
+      try {
+        return await provider.request({ method: 'wallet_watchAsset', params: [TOKEN.type, TOKEN.options] });
+      } catch (arrayError) {
+        try {
+          return await provider.request({ method: 'wallet_watchAsset', params: TOKEN });
+        } catch (objectError) {
+          const arrayMessage = arrayError && arrayError.message ? arrayError.message : String(arrayError);
+          const objectMessage = objectError && objectError.message ? objectError.message : String(objectError);
+          throw new Error(`MetaMask rejected both add-token formats. Current docs format: ${arrayMessage}. Legacy format: ${objectMessage}`);
+        }
+      }
+    }
+
     document.getElementById('add-token').addEventListener('click', async () => {
-      if (!window.ethereum) {
+      const provider = window.ethereum;
+      if (!provider) {
         showStatus('MetaMask is not available in this browser. Opening MetaMask Mobile now. If it does not open, use the “Open in MetaMask Mobile” button or copy the contract address below.');
         window.location.href = METAMASK_DEEPLINK;
         return;
       }
       try {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_PARAMS.chainId }] });
-      } catch (switchError) {
-        if (switchError && switchError.code === 4902) {
-          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [BASE_PARAMS] });
-        } else {
-          showStatus(`Could not switch to Base: ${switchError && switchError.message ? switchError.message : String(switchError)}`);
-          return;
-        }
-      }
-      try {
-        const wasAdded = await window.ethereum.request({ method: 'wallet_watchAsset', params: TOKEN });
-        showStatus(wasAdded ? 'TigerCoin was added to MetaMask.' : 'TigerCoin was not added.');
+        showStatus('Connecting MetaMask…');
+        await ensureConnected(provider);
+        showStatus('Switching MetaMask to Base…');
+        await ensureBase(provider);
+        showStatus('Requesting MetaMask to add TigerCoin with its icon…');
+        const wasAdded = await addToken(provider);
+        showStatus(wasAdded ? 'TigerCoin was added to MetaMask with the TigerCoin icon.' : 'TigerCoin was not added. If you cancelled the prompt, tap Add TGR to MetaMask again.');
       } catch (error) {
-        showStatus(`MetaMask did not add TigerCoin: ${error && error.message ? error.message : String(error)}`);
+        showStatus(`${error && error.message ? error.message : String(error)} Manual fallback: switch MetaMask to Base, tap Copy contract, then import TGR as a custom token.`);
       }
     });
   </script>
