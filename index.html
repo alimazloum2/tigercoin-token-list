@@ -67,12 +67,18 @@
       }
     };
     const status = document.getElementById('status');
+    const userAgent = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isMetaMaskMobileBrowser = /MetaMaskMobile/i.test(userAgent);
     const showStatus = (message) => {
       status.textContent = message;
       status.hidden = false;
     };
 
     document.getElementById('open-metamask').href = METAMASK_DEEPLINK;
+    if (isIOS && !isMetaMaskMobileBrowser) {
+      showStatus('You are in Safari. Tap “Open in MetaMask Mobile” first, then tap Add TGR inside MetaMask. The orange Add button will also open MetaMask from Safari.');
+    }
 
     document.getElementById('copy-address').addEventListener('click', async () => {
       const address = TOKEN.options.address;
@@ -149,6 +155,11 @@
     }
 
     document.getElementById('add-token').addEventListener('click', async () => {
+      if (isIOS && !isMetaMaskMobileBrowser) {
+        showStatus('Opening MetaMask Mobile. After it opens, tap Add TGR to MetaMask again inside MetaMask — not Safari.');
+        window.location.href = METAMASK_DEEPLINK;
+        return;
+      }
       const provider = window.ethereum;
       if (!provider) {
         showStatus('MetaMask is not available in this browser. Opening MetaMask Mobile now. If it does not open, use the “Open in MetaMask Mobile” button or copy the contract address below.');
