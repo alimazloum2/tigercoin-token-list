@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="expires" content="0">
   <title>TigerCoin Token List</title>
   <style>
     :root { color-scheme: light dark; }
@@ -14,6 +17,8 @@
     .secondary { background: #e5e7eb; color: #111827; }
     .secondary:hover { background: #d1d5db; }
     .notice { margin-top: 16px; padding: 12px 14px; border-radius: 8px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); }
+    .success { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.38); }
+    .danger { background: rgba(239, 68, 68, 0.13); border-color: rgba(239, 68, 68, 0.34); }
     .muted { color: #6b7280; }
     li { margin: 6px 0; }
   </style>
@@ -23,6 +28,7 @@
   <p><img src="assets/logo.png" alt="TigerCoin logo" width="128" height="128"></p>
   <p><strong>Token:</strong> TigerCoin (<code>TGR</code>) on Base, chain ID <code>8453</code>.</p>
   <p><strong>Contract:</strong> <code id="contract">0xa79d3083a7e303Db38e013C54135F178834Ccb1B</code></p>
+  <p class="muted"><strong>Page version:</strong> <code>2026-06-16-manual-import-primary</code></p>
   <p>TigerCoin is an ERC-20 community token deployed on Base. This page is the public token metadata page for wallet imports and token-list integrations.</p>
   <ul>
     <li><strong>BaseScan:</strong> <a href="https://basescan.org/token/0xa79d3083a7e303Db38e013C54135F178834Ccb1B">verified TGR contract</a></li>
@@ -30,19 +36,31 @@
     <li><strong>Token list:</strong> <a href="tokenlist.json">Uniswap-format tokenlist.json</a></li>
   </ul>
   <p>
-    <button id="add-token">Add TGR to MetaMask</button>
+    <button id="add-token">Copy TGR Contract + Show Import Steps</button>
     <a class="button secondary" id="open-metamask" href="https://metamask.app.link/dapp/alimazloum2.github.io/tigercoin-token-list/">Open in MetaMask Mobile</a>
     <button class="secondary" id="copy-address" type="button">Copy contract</button>
+    <button class="secondary" id="try-auto-import" type="button">Try MetaMask auto-import</button>
   </p>
   <div id="status" class="notice" hidden></div>
+  <div id="import-steps" class="notice success" hidden>
+    <strong>Import TGR manually in MetaMask:</strong>
+    <ol>
+      <li>Open MetaMask.</li>
+      <li>Switch network to <strong>Base</strong>.</li>
+      <li>On the Tokens screen, tap <strong>Import tokens</strong>.</li>
+      <li>Paste contract: <code>0xa79d3083a7e303Db38e013C54135F178834Ccb1B</code></li>
+      <li>MetaMask should fill <strong>TGR</strong> and <strong>18</strong>. If not, enter them manually.</li>
+      <li>Tap <strong>Import</strong>.</li>
+    </ol>
+  </div>
   <h2>Manual fallback</h2>
   <ol>
     <li>Open this page inside the <strong>MetaMask mobile browser</strong>, not Telegram/Safari.</li>
-    <li>Use the orange <strong>Add TGR to MetaMask</strong> button.</li>
+    <li>Use the orange <strong>Copy TGR Contract + Show Import Steps</strong> button.</li>
     <li>If needed, switch MetaMask to <strong>Base</strong>.</li>
     <li>Manual import contract: <code>0xa79d3083a7e303Db38e013C54135F178834Ccb1B</code>, symbol <code>TGR</code>, decimals <code>18</code>.</li>
   </ol>
-  <p class="muted">Telegram and normal Safari do not expose MetaMask's <code>window.ethereum</code> API. The MetaMask button below opens this same page in MetaMask Mobile, where the add-token request can run.</p>
+  <p class="muted">MetaMask Mobile is currently rejecting the automatic <code>wallet_watchAsset</code> add-token request for this Base token on some devices. Manual custom-token import is the deterministic path. The auto-import button is left only for testing.</p>
   <ul>
     <li><a href="tokenlist.json">tokenlist.json</a></li>
     <li><a href="assets/logo.png">logo.png</a></li>
@@ -67,28 +85,37 @@
       }
     };
     const status = document.getElementById('status');
+    const importSteps = document.getElementById('import-steps');
     const userAgent = navigator.userAgent || '';
     const isIOS = /iPad|iPhone|iPod/.test(userAgent);
     const isMetaMaskMobileBrowser = /MetaMaskMobile/i.test(userAgent);
-    const showStatus = (message) => {
+    const showStatus = (message, kind = 'notice') => {
       status.textContent = message;
+      status.className = `notice ${kind === 'success' ? 'success' : kind === 'danger' ? 'danger' : ''}`.trim();
       status.hidden = false;
+    };
+    const showImportSteps = () => {
+      importSteps.hidden = false;
+      importSteps.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     document.getElementById('open-metamask').href = METAMASK_DEEPLINK;
     if (isIOS && !isMetaMaskMobileBrowser) {
-      showStatus('You are in Safari. Tap “Open in MetaMask Mobile” first, then tap Add TGR inside MetaMask. The orange Add button will also open MetaMask from Safari.');
+      showStatus('You are in Safari/Chrome. Tap the orange button to copy the contract, then open MetaMask and import TGR manually on Base. Use auto-import only as a test.');
     }
 
-    document.getElementById('copy-address').addEventListener('click', async () => {
+    async function copyContractAndGuide() {
       const address = TOKEN.options.address;
       try {
         await navigator.clipboard.writeText(address);
-        showStatus('Contract address copied. Open MetaMask on Base and import TGR manually if the add-token prompt does not appear.');
+        showStatus('TGR contract copied. Now open MetaMask, switch to Base, tap Import tokens, paste the contract, and import TGR.', 'success');
       } catch {
-        showStatus(`Copy failed. Contract address: ${address}`);
+        showStatus(`Copy failed. Select and copy this contract manually: ${address}`, 'danger');
       }
-    });
+      showImportSteps();
+    }
+
+    document.getElementById('copy-address').addEventListener('click', copyContractAndGuide);
 
     async function ensureConnected(provider) {
       try {
@@ -154,15 +181,13 @@
       }
     }
 
-    document.getElementById('add-token').addEventListener('click', async () => {
-      if (isIOS && !isMetaMaskMobileBrowser) {
-        showStatus('Opening MetaMask Mobile. After it opens, tap Add TGR to MetaMask again inside MetaMask — not Safari.');
-        window.location.href = METAMASK_DEEPLINK;
-        return;
-      }
+    document.getElementById('add-token').addEventListener('click', copyContractAndGuide);
+
+    document.getElementById('try-auto-import').addEventListener('click', async () => {
       const provider = window.ethereum;
       if (!provider) {
-        showStatus('MetaMask is not available in this browser. Opening MetaMask Mobile now. If it does not open, use the “Open in MetaMask Mobile” button or copy the contract address below.');
+        showStatus('MetaMask auto-import requires the MetaMask in-app browser. Opening MetaMask Mobile now. If it still rejects the token, use the manual import steps shown above.', 'danger');
+        showImportSteps();
         window.location.href = METAMASK_DEEPLINK;
         return;
       }
@@ -171,11 +196,12 @@
         await ensureConnected(provider);
         showStatus('Switching MetaMask to Base…');
         await ensureBase(provider);
-        showStatus('Requesting MetaMask to add TigerCoin with its icon…');
+        showStatus('Requesting MetaMask to auto-import TigerCoin. If MetaMask rejects this, use the manual import steps; the token contract is valid on Base.');
         const wasAdded = await addToken(provider);
-        showStatus(wasAdded ? 'TigerCoin was added to MetaMask with the TigerCoin icon.' : 'TigerCoin was not added. If you cancelled the prompt, tap Add TGR to MetaMask again.');
+        showStatus(wasAdded ? 'TigerCoin was added to MetaMask with the TigerCoin icon.' : 'TigerCoin was not added. Use the manual import steps.', wasAdded ? 'success' : 'danger');
       } catch (error) {
-        showStatus(`${error && error.message ? error.message : String(error)} Manual fallback: switch MetaMask to Base, tap Copy contract, then import TGR as a custom token.`);
+        showStatus(`${error && error.message ? error.message : String(error)} MetaMask auto-import failed on this app/device. Use manual import: contract ${TOKEN.options.address}, symbol TGR, decimals 18.`, 'danger');
+        showImportSteps();
       }
     });
   </script>
