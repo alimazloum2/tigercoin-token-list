@@ -20,6 +20,9 @@
     .success { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.38); }
     .danger { background: rgba(239, 68, 68, 0.13); border-color: rgba(239, 68, 68, 0.34); }
     .muted { color: #6b7280; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+    .card { border: 1px solid rgba(127, 127, 127, 0.28); border-radius: 10px; padding: 12px 14px; background: rgba(127, 127, 127, 0.06); }
+    .card strong { display: block; margin-bottom: 4px; }
     li { margin: 6px 0; }
   </style>
 </head>
@@ -28,8 +31,8 @@
   <p><img src="assets/logo.png" alt="TigerCoin logo" width="128" height="128"></p>
   <p><strong>Token:</strong> TigerCoin (<code>TGR</code>) on Base, chain ID <code>8453</code>.</p>
   <p><strong>Contract:</strong> <code id="contract">0xa79d3083a7e303Db38e013C54135F178834Ccb1B</code></p>
-  <p class="muted"><strong>Page version:</strong> <code>2026-06-16-manual-import-primary</code></p>
-  <p>TigerCoin is an ERC-20 community token deployed on Base. This page is the public token metadata page for wallet imports and token-list integrations.</p>
+  <p class="muted"><strong>Page version:</strong> <code>2026-06-16-tokenomics-trust-page</code></p>
+  <p>TigerCoin is an ERC-20 community token deployed on Base. This page is the public token metadata, tokenomics, and transparency page for wallet imports and token-list integrations.</p>
   <ul>
     <li><strong>BaseScan:</strong> <a href="https://basescan.org/token/0xa79d3083a7e303Db38e013C54135F178834Ccb1B">verified TGR contract</a></li>
     <li><strong>Pool:</strong> <a href="https://www.geckoterminal.com/base/pools/0x51D79c0AF0AF6cE1af8a0c9520cF6836bd7995b2">TGR/WETH on GeckoTerminal</a></li>
@@ -65,6 +68,45 @@
     <li><a href="tokenlist.json">tokenlist.json</a></li>
     <li><a href="assets/logo.png">logo.png</a></li>
   </ul>
+
+  <h2>Project overview</h2>
+  <p>TigerCoin (<code>TGR</code>) is an early-stage Base ERC-20 community token. The current focus is transparent public metadata, verified contract information, wallet import support, and gradual trust-building before broader promotion.</p>
+
+  <div class="grid">
+    <div class="card"><strong>Network</strong>Base mainnet, chain ID <code>8453</code></div>
+    <div class="card"><strong>Token standard</strong>ERC-20</div>
+    <div class="card"><strong>Total supply</strong><code>1,000,000 TGR</code></div>
+    <div class="card"><strong>Decimals</strong><code>18</code></div>
+    <div class="card"><strong>Primary pool</strong>TGR/WETH on Uniswap v3 Base, 0.30% fee tier</div>
+    <div class="card"><strong>Stage</strong>Early launch / metadata and liquidity-building phase</div>
+  </div>
+
+  <h2>Tokenomics</h2>
+  <ul>
+    <li><strong>Maximum/current supply:</strong> <code>1,000,000 TGR</code>.</li>
+    <li><strong>Decimals:</strong> <code>18</code>.</li>
+    <li><strong>Network:</strong> Base mainnet.</li>
+    <li><strong>Liquidity:</strong> Initial TGR/WETH liquidity exists on Uniswap v3; liquidity is currently small and may be increased over time.</li>
+    <li><strong>Planned liquidity policy:</strong> Add liquidity gradually as funds are available, then publish lock proof when meaningful liquidity is locked.</li>
+    <li><strong>Wallet metadata:</strong> Public logo and token-list files are hosted here; MetaMask global icon visibility depends on MetaMask reviewing and accepting the submitted metadata.</li>
+  </ul>
+
+  <h2>Transparency and risk status</h2>
+  <ul>
+    <li><strong>Verified contract:</strong> public BaseScan contract link is provided above.</li>
+    <li><strong>New token risk:</strong> TGR is new, has low liquidity, limited trading history, and may be flagged by wallets until stronger public trust signals exist.</li>
+    <li><strong>Icon status:</strong> the hosted icon is valid, but MetaMask manual imports may still show a default letter icon until MetaMask accepts/indexes the token metadata.</li>
+    <li><strong>No guarantee:</strong> this page is informational only and is not financial advice. Token value and liquidity can change quickly.</li>
+  </ul>
+
+  <h2>Current trust-building roadmap</h2>
+  <ol>
+    <li>Keep verified contract, token list, and icon publicly available.</li>
+    <li>Increase real TGR/WETH liquidity when funds are available.</li>
+    <li>Lock meaningful Uniswap v3 LP liquidity and publish the lock proof.</li>
+    <li>Update wallet/listing submissions with the verified contract, pool, logo, tokenomics, and lock proof.</li>
+    <li>Grow real holders and organic usage without fake volume or wash trading.</li>
+  </ol>
   <script>
     const PAGE_URL = 'https://alimazloum2.github.io/tigercoin-token-list/';
     const METAMASK_DEEPLINK = `https://metamask.app.link/dapp/${PAGE_URL.replace(/^https?:\/\//, '')}`;
